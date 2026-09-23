@@ -166,11 +166,19 @@ export class StudioClient {
   }
 
   readonly feedback = {
-    submit: async (input: SubmitFeedbackInput): Promise<SubmitFeedbackResult> =>
-      this.#call<SubmitFeedbackResult>("/feedback", {
+    submit: async (input: SubmitFeedbackInput): Promise<SubmitFeedbackResult> => {
+      const { country, ...rest } = input
+      return this.#call<SubmitFeedbackResult>("/feedback", {
         method: "POST",
-        body: { ...input, sdk: { name: SDK_NAME, version: SDK_VERSION } },
-      }),
+        body: {
+          ...rest,
+          // Country travels with the rest of the device context, which is
+          // where the API reads it from.
+          ...(country ? { device: { ...this.#config.device, country } } : {}),
+          sdk: { name: SDK_NAME, version: SDK_VERSION },
+        },
+      })
+    },
 
     /** This install's own feedback, newest first. */
     list: async (): Promise<FeedbackSummary[]> => {

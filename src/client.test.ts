@@ -137,6 +137,14 @@ describe("feedback", () => {
     })
   })
 
+  it("sends an explicit country as device context", async () => {
+    const { studio, calls } = client(routes)
+    await studio.feedback.submit({ message: "hi", country: "JP" })
+    const submit = calls.find((c) => c.url.endsWith("/feedback"))
+    expect(submit?.body).toMatchObject({ message: "hi", device: { country: "JP" } })
+    expect(submit?.body).not.toHaveProperty("country")
+  })
+
   it("passes warnings through instead of throwing", async () => {
     const { studio } = client({
       ...routes,

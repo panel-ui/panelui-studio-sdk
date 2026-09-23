@@ -71,5 +71,21 @@ export async function detectDevice(): Promise<DeviceContext> {
     if (language) device.locale = language
   }
 
+  // The region the phone is configured for. A good guess at where someone is,
+  // and free — unlike asking for location, which costs a permission prompt at
+  // the worst possible moment. An app that knows better passes `country` to
+  // submit() and that wins.
+  const region = regionOf(device.locale)
+  if (region) device.country = region
+
   return device
+}
+
+/** `en-US` → US, `zh-Hans-CN` → CN, `fr` → undefined. */
+function regionOf(locale: string | undefined): string | undefined {
+  if (!locale) return undefined
+  for (const part of locale.replace(/_/g, "-").split("-").slice(1)) {
+    if (/^[A-Za-z]{2}$/.test(part)) return part.toUpperCase()
+  }
+  return undefined
 }

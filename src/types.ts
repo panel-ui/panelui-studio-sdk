@@ -9,6 +9,8 @@ export type DeviceContext = {
   model?: string
   locale?: string
   appVersion?: string
+  /** ISO-3166-1 alpha-2. Filled from the device locale when not given. */
+  country?: string
 }
 
 export type Installation = {
@@ -29,6 +31,14 @@ export type SubmitFeedbackInput = {
   metadata?: Record<string, unknown>
   /** Ids from `uploads.screenshot()`, up to three. */
   attachmentIds?: string[]
+  /**
+   * Where this user is, as an ISO-3166-1 alpha-2 code.
+   *
+   * Pass it when your app already knows — a profile, a region picker, your own
+   * settings. Left out, Studio falls back to the device locale's region and
+   * then to the country of the request, so the dashboard's map still works.
+   */
+  country?: string
 }
 
 export type SubmittedFeedback = {
