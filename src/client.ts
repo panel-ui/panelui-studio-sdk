@@ -210,7 +210,8 @@ export class StudioClient {
      * Uploads a screenshot and returns its id for `feedback.submit`.
      *
      * Three steps: ask Studio for a presigned URL, PUT the bytes straight to
-     * storage, then pass the id with the submission. Pro and Team only.
+     * storage, then pass the id with the submission. Every plan has
+     * screenshots; a full workspace fails with `storage_full`.
      */
     screenshot: async (input: ScreenshotInput): Promise<string> => {
       const contentType = input.contentType ?? contentTypeFor(input.uri)

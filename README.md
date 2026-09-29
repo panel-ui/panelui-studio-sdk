@@ -36,7 +36,7 @@ users, no secret in the app.
 | `studio.feedback.list()` | This install's own submissions, newest first. |
 | `studio.conversations.messages(id)` | The thread for one item. Reading marks replies as read. |
 | `studio.conversations.send(id, body)` | A follow-up from the user. |
-| `studio.uploads.screenshot({ uri })` | Uploads an image and returns an `attachmentId` for `submit`. Pro and Team. |
+| `studio.uploads.screenshot({ uri })` | Uploads an image and returns an `attachmentId` for `submit`. 1 per report on Free, 3 on Pro and Team. |
 | `studio.reset()` | Forgets the install, e.g. on sign-out of a shared device. |
 
 ## React

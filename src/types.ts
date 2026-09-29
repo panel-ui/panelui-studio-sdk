@@ -29,7 +29,7 @@ export type SubmitFeedbackInput = {
   build?: string
   /** Pro and Team. Ignored on Free, which returns a warning instead. */
   metadata?: Record<string, unknown>
-  /** Ids from `uploads.screenshot()`, up to three. */
+  /** Ids from `uploads.screenshot()`: 1 per report on Free, 3 on Pro and Team. */
   attachmentIds?: string[]
   /**
    * Where this user is, as an ISO-3166-1 alpha-2 code.
@@ -50,7 +50,7 @@ export type SubmittedFeedback = {
 
 export type SubmitFeedbackResult = {
   feedback: SubmittedFeedback
-  /** Accepted, but something was left out: `metadata_ignored`, `tags_dropped`. */
+  /** Accepted, with something to know: `metadata_ignored`, `tags_dropped`, `over_quota`. */
   warnings: string[]
 }
 
