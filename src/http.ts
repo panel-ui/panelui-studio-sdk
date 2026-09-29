@@ -33,6 +33,7 @@ const ERROR_CODES = new Set<string>([
   "payload_too_large",
   "rate_limited",
   "storage_unavailable",
+  "storage_full",
   "internal_error",
 ])
 

@@ -10,6 +10,7 @@ export type StudioErrorCode =
   | "payload_too_large"
   | "rate_limited"
   | "storage_unavailable"
+  | "storage_full"
   | "internal_error"
   | "network_error"
   | "timeout"
