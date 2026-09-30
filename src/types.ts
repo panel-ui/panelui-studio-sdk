@@ -32,6 +32,11 @@ export type SubmitFeedbackInput = {
   /** Ids from `uploads.screenshot()`: 1 per report on Free, 3 on Pro and Team. */
   attachmentIds?: string[]
   /**
+   * Answers to the project's custom form, keyed by field key (see
+   * `feedback.form()`). Pro and Team. Required fields apply once you send any.
+   */
+  fields?: Record<string, FormAnswer>
+  /**
    * Where this user is, as an ISO-3166-1 alpha-2 code.
    *
    * Pass it when your app already knows — a profile, a region picker, your own
@@ -39,6 +44,39 @@ export type SubmitFeedbackInput = {
    * then to the country of the request, so the dashboard's map still works.
    */
   country?: string
+}
+
+export type FormAnswer = string | number | boolean
+
+/** One question on the project's custom feedback form. */
+export type FormField = {
+  key: string
+  label: string
+  type: "text" | "textarea" | "choice" | "checkbox" | "rating"
+  /** The choices, for `choice` fields. */
+  options: string[]
+  required: boolean
+}
+
+/** Starting a support conversation: a message plus the context a report can carry. */
+export type StartSupportInput = Omit<SubmitFeedbackInput, "rating" | "tags">
+
+export type StartSupportResult = {
+  conversation: SubmittedFeedback
+  warnings: string[]
+}
+
+export type Announcement = {
+  id: string
+  title: string
+  body: string
+  /** A button to show with it, if the project set one. */
+  cta: { label: string; url: string } | null
+  /** When it stops showing, if it has an end. */
+  endsAt: string | null
+  /** Whether this install already marked it seen. */
+  seen: boolean
+  createdAt: string
 }
 
 export type SubmittedFeedback = {
@@ -50,13 +88,15 @@ export type SubmittedFeedback = {
 
 export type SubmitFeedbackResult = {
   feedback: SubmittedFeedback
-  /** Accepted, with something to know: `metadata_ignored`, `tags_dropped`, `over_quota`. */
+  /** Accepted, with something to know: `metadata_ignored`, `fields_ignored`, `tags_dropped`, `over_quota`. */
   warnings: string[]
 }
 
 export type FeedbackSummary = {
   id: string
   number: number
+  /** "support" for conversations started with `support.start()`. */
+  kind: "feedback" | "support"
   message: string
   status: FeedbackStatus
   createdAt: string

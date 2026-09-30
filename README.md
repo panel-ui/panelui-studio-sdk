@@ -37,12 +37,21 @@ users, no secret in the app.
 | `studio.conversations.messages(id)` | The thread for one item. Reading marks replies as read. |
 | `studio.conversations.send(id, body)` | A follow-up from the user. |
 | `studio.uploads.screenshot({ uri })` | Uploads an image and returns an `attachmentId` for `submit`. 1 per report on Free, 3 on Pro and Team. |
+| `studio.feedback.form()` | The project's custom form fields, to render next to the message. Send answers as `submit({ fields })`. Pro and Team. |
+| `studio.support.start(message)` | Starts a support conversation; replies come through `conversations.messages(id)`. |
+| `studio.announcements.list()` | Live announcements for this install. `seen(id)` records a view, `dismiss(id)` hides it for good. |
 | `studio.reset()` | Forgets the install, e.g. on sign-out of a shared device. |
 
 ## React
 
 ```tsx
-import { StudioProvider, useConversation, useFeedbackList } from "panelui-studio/react"
+import {
+  StudioProvider,
+  useAnnouncements,
+  useConversation,
+  useFeedbackForm,
+  useFeedbackList,
+} from "panelui-studio/react"
 
 export function App() {
   return (
@@ -60,6 +69,17 @@ function Inbox() {
 function Thread({ id }: { id: string }) {
   // Replies arrive over plain HTTP, so a thread being read is polled.
   const { messages, isSending, send } = useConversation(id, { pollMs: 15_000 })
+  // …
+}
+
+function Form() {
+  // The project's custom fields; empty when it has none.
+  const { fields } = useFeedbackForm()
+  // …
+}
+
+function Banner() {
+  const { announcements, dismiss } = useAnnouncements()
   // …
 }
 ```

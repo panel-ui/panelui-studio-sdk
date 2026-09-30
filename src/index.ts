@@ -9,13 +9,18 @@ export {
 } from "./storage"
 export { detectDevice } from "./device"
 export type {
+  Announcement,
   AppPlatform,
   ConversationMessage,
   DeviceContext,
   FeedbackStatus,
   FeedbackSummary,
+  FormAnswer,
+  FormField,
   Installation,
   ScreenshotInput,
+  StartSupportInput,
+  StartSupportResult,
   SubmitFeedbackInput,
   SubmitFeedbackResult,
   SubmittedFeedback,

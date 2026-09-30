@@ -3,11 +3,15 @@ import { StudioError } from "./errors"
 import { request, type FetchLike } from "./http"
 import { defaultStorage, type StudioStorage } from "./storage"
 import type {
+  Announcement,
   ConversationMessage,
   DeviceContext,
   FeedbackSummary,
+  FormField,
   Installation,
   ScreenshotInput,
+  StartSupportInput,
+  StartSupportResult,
   SubmitFeedbackInput,
   SubmitFeedbackResult,
 } from "./types"
@@ -180,10 +184,50 @@ export class StudioClient {
       })
     },
 
-    /** This install's own feedback, newest first. */
+    /** This install's own feedback and support conversations, newest first. */
     list: async (): Promise<FeedbackSummary[]> => {
       const data = await this.#call<{ feedback: FeedbackSummary[] }>("/feedback")
       return data.feedback
+    },
+
+    /** The project's custom form fields, to render next to the message. Empty when there are none. */
+    form: async (): Promise<FormField[]> => {
+      const data = await this.#call<{ fields: FormField[] }>("/form")
+      return data.fields
+    },
+  }
+
+  readonly support = {
+    /**
+     * Starts a support conversation. It lands in the project's Support inbox,
+     * and the reply thread works like any other: `conversations.messages(id)`.
+     */
+    start: async (input: StartSupportInput | string): Promise<StartSupportResult> => {
+      const { country, ...rest } = typeof input === "string" ? { message: input } : input
+      return this.#call<StartSupportResult>("/support", {
+        method: "POST",
+        body: {
+          ...rest,
+          ...(country ? { device: { ...this.#config.device, country } } : {}),
+          sdk: { name: SDK_NAME, version: SDK_VERSION },
+        },
+      })
+    },
+  }
+
+  readonly announcements = {
+    /** Announcements this install should show now: live, for its platform, not dismissed. */
+    list: async (): Promise<Announcement[]> => {
+      const data = await this.#call<{ announcements: Announcement[] }>("/announcements")
+      return data.announcements
+    },
+    /** Records that the announcement was shown, for the project's view count. */
+    seen: async (id: string): Promise<void> => {
+      await this.#call(`/announcements/${encodeURIComponent(id)}/seen`, { method: "POST" })
+    },
+    /** Closes it for this install; it won't be listed again. */
+    dismiss: async (id: string): Promise<void> => {
+      await this.#call(`/announcements/${encodeURIComponent(id)}/dismiss`, { method: "POST" })
     },
   }
 

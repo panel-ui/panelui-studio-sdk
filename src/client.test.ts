@@ -313,3 +313,44 @@ describe("uploads", () => {
     expect(calls.some((url) => url.endsWith("/uploads"))).toBe(false)
   })
 })
+
+describe("forms, support and announcements", () => {
+  it("fetches the form and sends answers with a report", async () => {
+    const { studio, calls } = client({
+      "POST /api/v1/installations": () => json(REGISTERED, { status: 201 }),
+      "GET /api/v1/form": () => json({ fields: [{ key: "plan", label: "Plan", type: "text", options: [], required: true }] }),
+      "POST /api/v1/feedback": () => json({ feedback: { id: "fb_1", number: 1, status: "new", createdAt: "" }, warnings: [] }, { status: 201 }),
+    })
+    const fields = await studio.feedback.form()
+    expect(fields[0]?.key).toBe("plan")
+    await studio.feedback.submit({ message: "Hi", fields: { plan: "pro" } })
+    expect(calls.at(-1)?.body).toMatchObject({ message: "Hi", fields: { plan: "pro" } })
+  })
+
+  it("starts a support conversation from a string or an object", async () => {
+    const { studio, calls } = client({
+      "POST /api/v1/installations": () => json(REGISTERED, { status: 201 }),
+      "POST /api/v1/support": () =>
+        json({ conversation: { id: "fb_2", number: 2, status: "new", createdAt: "" }, warnings: [] }, { status: 201 }),
+    })
+    const started = await studio.support.start("I can't sign in")
+    expect(started.conversation.id).toBe("fb_2")
+    expect(calls.at(-1)?.body).toMatchObject({ message: "I can't sign in", sdk: { name: "panelui-studio" } })
+    await studio.support.start({ message: "Again", screen: "/login" })
+    expect(calls.at(-1)?.body).toMatchObject({ message: "Again", screen: "/login" })
+  })
+
+  it("lists announcements and marks them seen or dismissed", async () => {
+    const { studio, calls } = client({
+      "POST /api/v1/installations": () => json(REGISTERED, { status: 201 }),
+      "GET /api/v1/announcements": () =>
+        json({ announcements: [{ id: "an_1", title: "Hi", body: "B", cta: null, endsAt: null, seen: false, createdAt: "" }] }),
+      "POST /api/v1/announcements/an_1/seen": () => json({ ok: true }),
+      "POST /api/v1/announcements/an_1/dismiss": () => json({ ok: true }),
+    })
+    expect((await studio.announcements.list())[0]?.id).toBe("an_1")
+    await studio.announcements.seen("an_1")
+    await studio.announcements.dismiss("an_1")
+    expect(calls.map((c) => `${c.method} ${new URL(c.url).pathname}`)).toContain("POST /api/v1/announcements/an_1/dismiss")
+  })
+})

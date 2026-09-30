@@ -12,7 +12,7 @@ import {
 
 import { createStudio, StudioClient, type StudioConfig } from "../client"
 import { StudioError } from "../errors"
-import type { ConversationMessage, FeedbackSummary, SubmitFeedbackInput } from "../types"
+import type { Announcement, ConversationMessage, FeedbackSummary, FormField, SubmitFeedbackInput } from "../types"
 
 const StudioContext = createContext<StudioClient | null>(null)
 
@@ -225,4 +225,99 @@ export function useConversation(
     send,
     reload,
   }
+}
+
+/**
+ * The project's custom form, loaded once. `fields` is empty until it loads
+ * and when the project has no form, so rendering it is always safe.
+ */
+export function useFeedbackForm(): { fields: FormField[]; isLoading: boolean; error: StudioError | null } {
+  const studio = useStudio()
+  const [fields, setFields] = useState<FormField[] | null>(null)
+  const [error, setError] = useState<StudioError | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void studio.feedback.form().then(
+      (next) => {
+        if (!cancelled) setFields(next)
+      },
+      (cause: unknown) => {
+        if (!cancelled) {
+          setFields([])
+          setError(asStudioError(cause))
+        }
+      }
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [studio])
+
+  return { fields: fields ?? [], isLoading: fields === null && error === null, error }
+}
+
+/**
+ * Live announcements for this install. `dismiss` hides one straight away and
+ * tells Studio; `seen` records a view without hiding it.
+ */
+export function useAnnouncements(): {
+  announcements: Announcement[]
+  isLoading: boolean
+  error: StudioError | null
+  seen: (id: string) => Promise<void>
+  dismiss: (id: string) => Promise<void>
+  reload: () => Promise<void>
+} {
+  const studio = useStudio()
+  const [items, setItems] = useState<Announcement[] | null>(null)
+  const [error, setError] = useState<StudioError | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void studio.announcements.list().then(
+      (next) => {
+        if (!cancelled) setItems(next)
+      },
+      (cause: unknown) => {
+        if (!cancelled) {
+          setItems((current) => current ?? [])
+          setError(asStudioError(cause))
+        }
+      }
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [studio])
+
+  const reload = useCallback(
+    () =>
+      studio.announcements.list().then(
+        (next) => {
+          setItems(next)
+          setError(null)
+        },
+        (cause: unknown) => setError(asStudioError(cause))
+      ),
+    [studio]
+  )
+
+  const seen = useCallback(
+    async (id: string) => {
+      setItems((current) => current?.map((a) => (a.id === id ? { ...a, seen: true } : a)) ?? current)
+      await studio.announcements.seen(id)
+    },
+    [studio]
+  )
+
+  const dismiss = useCallback(
+    async (id: string) => {
+      setItems((current) => current?.filter((a) => a.id !== id) ?? current)
+      await studio.announcements.dismiss(id)
+    },
+    [studio]
+  )
+
+  return { announcements: items ?? [], isLoading: items === null && error === null, error, seen, dismiss, reload }
 }
