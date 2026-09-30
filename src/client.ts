@@ -17,7 +17,7 @@ import type {
 } from "./types"
 
 export const SDK_NAME = "panelui-studio"
-export const SDK_VERSION = "0.1.1"
+export const SDK_VERSION = "0.2.0"
 
 const DEFAULT_BASE_URL = "https://studio.panelui.dev/api/v1"
 const STORAGE_KEY = "panelui-studio.installation"
