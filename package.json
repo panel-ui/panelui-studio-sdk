@@ -1,6 +1,6 @@
 {
   "name": "panelui-studio",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Client for PanelUI Studio: feedback, conversations and screenshots for any React Native or Expo app.",
   "license": "MIT",
   "repository": {
