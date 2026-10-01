@@ -291,6 +291,41 @@ describe("uploads", () => {
     expect(put?.headers["Content-Type"]).toBe("image/png")
   })
 
+  it("reads a bare path and uploads the bytes typed as signed", async () => {
+    // What react-native-view-shot returns on iOS: no scheme, and an untyped blob.
+    const untyped = new Blob([new Uint8Array(64)])
+    const reads: string[] = []
+    let body: unknown
+    const fetchImpl: FetchLike = async (url, init = {}) => {
+      if (url.startsWith("file:")) {
+        reads.push(url)
+        return new Response(untyped)
+      }
+      if (url.endsWith("/installations")) return json(REGISTERED, { status: 201 })
+      if (url.endsWith("/uploads")) {
+        return json(
+          { attachmentId: "att_2", uploadUrl: "https://r2.test/put", headers: { "Content-Type": "image/png" } },
+          { status: 201 }
+        )
+      }
+      body = init.body
+      return new Response(null, { status: 200 })
+    }
+    const studio = createStudio({
+      publishableKey: KEY,
+      baseUrl: "https://studio.test/api/v1",
+      storage: memoryStorage(),
+      fetch: fetchImpl,
+    })
+
+    await studio.uploads.screenshot({ uri: "/tmp/ReactNative/shot.png" })
+
+    expect(reads).toEqual(["file:///tmp/ReactNative/shot.png"])
+    expect(body).toBeInstanceOf(Blob)
+    expect((body as Blob).type).toBe("image/png")
+    expect((body as Blob).size).toBe(64)
+  })
+
   it("refuses an oversized screenshot before asking for a URL", async () => {
     const calls: string[] = []
     const fetchImpl: FetchLike = async (url) => {

@@ -259,7 +259,7 @@ export class StudioClient {
      */
     screenshot: async (input: ScreenshotInput): Promise<string> => {
       const contentType = input.contentType ?? contentTypeFor(input.uri)
-      const blob = await this.#readBlob(input.uri)
+      const blob = await this.#readBlob(input.uri, contentType)
       const byteSize = input.byteSize ?? blob.size
 
       if (byteSize > MAX_SCREENSHOT_BYTES) {
@@ -290,14 +290,22 @@ export class StudioClient {
     },
   }
 
-  async #readBlob(uri: string): Promise<Blob> {
-    const response = await this.#config.fetchImpl(uri)
+  /**
+   * The file's bytes, typed as what was signed. React Native sends a blob's
+   * own type as the PUT's Content-Type, over any header passed, and a blob
+   * read from a file has none — so an untyped one fails the signature.
+   */
+  async #readBlob(uri: string, contentType: string): Promise<Blob> {
+    // Capture libraries (react-native-view-shot on iOS) hand back bare paths.
+    const url = uri.startsWith("/") ? `file://${uri}` : uri
+    const response = await this.#config.fetchImpl(url)
     if (!response.ok) {
       throw new StudioError("bad_request", `Couldn't read the file at ${uri}.`, {
         status: response.status,
       })
     }
-    return response.blob()
+    const blob = await response.blob()
+    return blob.type === contentType ? blob : new Blob([blob], { type: contentType })
   }
 }
 
