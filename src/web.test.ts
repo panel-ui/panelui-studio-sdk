@@ -59,7 +59,7 @@ describe("browserStorage", () => {
   })
 })
 
-describe("the default storage on the web", () => {
+describe("in a browser", () => {
   it("keeps the install across page loads", async () => {
     vi.stubGlobal("window", {})
     vi.stubGlobal("localStorage", fakeLocalStorage())
@@ -77,6 +77,18 @@ describe("the default storage on the web", () => {
     await load().feedback.list()
 
     expect(registrations).toHaveLength(1)
+  })
+
+  it("never calls fetch with a `this` a browser would reject", async () => {
+    // A browser's fetch throws "Illegal invocation" unless `this` is window.
+    const strictFetch = async function (this: unknown, url: string) {
+      if (this !== undefined && this !== globalThis) throw new TypeError("Illegal invocation")
+      return new Response(JSON.stringify(url.endsWith("/installations") ? REGISTERED : {}), { status: 201 })
+    }
+    vi.stubGlobal("fetch", strictFetch)
+    const studio = createStudio({ publishableKey: KEY, baseUrl: "https://studio.test/api/v1", device: {} })
+
+    await expect(studio.register()).resolves.toEqual(REGISTERED)
   })
 
   it("explains that secure storage is native only", () => {

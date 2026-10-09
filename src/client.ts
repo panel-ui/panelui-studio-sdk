@@ -91,7 +91,9 @@ export class StudioClient {
       timeoutMs: config.timeoutMs ?? 10_000,
       storage: config.storage ?? defaultStorage(),
       device: config.device,
-      fetchImpl,
+      // Called as a plain function, never as a method of this object: a
+      // browser's fetch throws "Illegal invocation" when `this` isn't window.
+      fetchImpl: (url, init) => fetchImpl(url, init),
     }
   }
 
