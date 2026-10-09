@@ -1,14 +1,18 @@
 # panelui-studio
 
 The client for [PanelUI Studio](https://studio.panelui.dev): feedback, conversations and
-screenshots for **any React Native or Expo app**. PanelUI is not required — if you
-do use it, its components drop straight on top.
+screenshots for **React Native, Expo and web apps** (Next.js, React, Vite). PanelUI
+is not required — if you do use it, its components drop straight on top in an app.
 
 ```sh
 npm install panelui-studio
-# optional, but recommended: the installation token is a per-device secret
+# in an Expo app, optional but recommended: the installation token is a per-device secret
 npx expo install expo-secure-store
 ```
+
+Bundlers pick the right build on their own: React Native and Expo get the native
+one through the `react-native` export condition, and everything else — Next.js,
+Vite, Expo's web target — gets a build with no React Native imports at all.
 
 ## Quickstart
 
@@ -84,7 +88,31 @@ function Banner() {
 }
 ```
 
+### Next.js
+
+`panelui-studio/react` is a client module, so a server layout can render
+`<StudioProvider publishableKey={process.env.NEXT_PUBLIC_STUDIO_KEY!}>` directly.
+To share a client created in `lib/studio.ts` instead, pass it from a client
+component — a class instance can't cross from a server component:
+
+```tsx
+// app/providers.tsx
+"use client"
+
+import { StudioProvider } from "panelui-studio/react"
+import { studio } from "@/lib/studio"
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return <StudioProvider client={studio}>{children}</StudioProvider>
+}
+```
+
+With Vite, read the key from `import.meta.env.VITE_STUDIO_KEY`.
+
 ## With PanelUI
+
+PanelUI's components are React Native components, so this is for apps; on the web,
+build the form with your own components.
 
 `Feedback.Submit` hands you the message; the SDK builds the rest of the payload.
 
@@ -132,6 +160,13 @@ const attachmentId = await studio.uploads.screenshot({ uri: localFileUri })
 await studio.feedback.submit({ message, attachmentIds: [attachmentId] })
 ```
 
+On the web, pass the image itself — a `File` from `<input type="file">`, or any
+`Blob`:
+
+```ts
+const attachmentId = await studio.uploads.screenshot({ file: input.files[0] })
+```
+
 Up to three per submission, 5 MB each, png/jpeg/webp. The bytes go straight from
 the device to private storage with a short-lived signed URL; Studio never proxies
 them.
@@ -164,25 +199,32 @@ Codes: `quota_exceeded`, `rate_limited` (with `retryAfter` in seconds),
 createStudio({
   publishableKey: "pk_…",
   baseUrl: "https://studio.example.com/api/v1", // self-hosted Studio
-  storage: memoryStorage(),                     // default: secure storage, then AsyncStorage
+  storage: memoryStorage(),                     // default: see Storage below
   device: { appVersion: "2.4.1" },              // overrides what's detected
   timeoutMs: 10_000,
   fetch: myFetch,                               // a proxy, or a stub in tests
 })
 ```
 
-**Device context** is detected automatically from React Native's `Platform` and,
-when installed, `expo-device`, `expo-constants` and `expo-localization`. Nothing
-is required: a missing module means a missing field, never a crash.
+**Device context** is detected automatically. In an app it comes from React
+Native's `Platform` and, when installed, `expo-device`, `expo-constants` and
+`expo-localization`; nothing is required, and a missing module means a missing
+field, never a crash. In a browser it comes from client hints or the user agent:
+the OS and its version, the browser as `model` (`Chrome 129`) and the locale.
+Browsers have no app version to read, so pass `device: { appVersion }`. During
+server rendering nothing is detected and nothing is sent.
 
-**Storage** keeps the installation token between launches. `expo-secure-store` is
-used when present, then `@react-native-async-storage/async-storage`, then memory
-(which registers a new install on every launch). Pass your own to control it.
+**Storage** keeps the installation token between launches. In an app,
+`expo-secure-store` is used when present, then
+`@react-native-async-storage/async-storage`, then memory (which registers a new
+install on every launch). On the web it's `localStorage` (`browserStorage()`),
+falling back to memory where the browser blocks it. Pass your own to control it.
 
 ## Platform support
 
-Expo, bare React Native, and the browser. The API is plain HTTP with CORS open,
-so anything that can `fetch` can talk to Studio — see
+Expo, bare React Native, and the web: Next.js, React, Vite and Expo's web target.
+The API is plain HTTP with CORS open, so anything that can `fetch` can talk to
+Studio — see
 [the API reference](https://github.com/panel-ui/panelui-studio/blob/main/docs/api.md).
 
 ## License
