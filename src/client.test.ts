@@ -347,6 +347,59 @@ describe("uploads", () => {
     expect(error.code).toBe("payload_too_large")
     expect(calls.some((url) => url.endsWith("/uploads"))).toBe(false)
   })
+
+  it("uploads a picked file as it is, with its own type", async () => {
+    const file = new File([new Uint8Array(32)], "shot.webp", { type: "image/webp" })
+    const calls: Call[] = []
+    let body: unknown
+    const fetchImpl: FetchLike = async (url, init = {}) => {
+      const parsed = typeof init.body === "string" ? JSON.parse(init.body) : undefined
+      calls.push({ url, method: init.method ?? "GET", headers: init.headers ?? {}, body: parsed })
+      if (url.endsWith("/installations")) return json(REGISTERED, { status: 201 })
+      if (url.endsWith("/uploads")) {
+        return json(
+          { attachmentId: "att_3", uploadUrl: "https://r2.test/put", headers: { "Content-Type": "image/webp" } },
+          { status: 201 }
+        )
+      }
+      body = init.body
+      return new Response(null, { status: 200 })
+    }
+    const studio = createStudio({
+      publishableKey: KEY,
+      baseUrl: "https://studio.test/api/v1",
+      storage: memoryStorage(),
+      fetch: fetchImpl,
+    })
+
+    expect(await studio.uploads.screenshot({ file })).toBe("att_3")
+    expect(calls.find((c) => c.url.endsWith("/uploads"))?.body).toEqual({
+      contentType: "image/webp",
+      byteSize: 32,
+    })
+    expect(body).toBe(file)
+  })
+
+  it("refuses a file that isn't an image before asking for a URL", async () => {
+    const calls: string[] = []
+    const fetchImpl: FetchLike = async (url) => {
+      calls.push(url)
+      return json(REGISTERED, { status: 201 })
+    }
+    const studio = createStudio({
+      publishableKey: KEY,
+      baseUrl: "https://studio.test/api/v1",
+      storage: memoryStorage(),
+      fetch: fetchImpl,
+    })
+
+    const file = new File(["%PDF"], "invoice.pdf", { type: "application/pdf" })
+    const error = (await studio.uploads.screenshot({ file }).catch((e: unknown) => e)) as StudioError
+
+    expect(error.code).toBe("bad_request")
+    expect(error.message).toMatch(/application\/pdf/)
+    expect(calls).toEqual([])
+  })
 })
 
 describe("forms, support and announcements", () => {

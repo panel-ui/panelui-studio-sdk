@@ -9,6 +9,7 @@ import type {
   FeedbackSummary,
   FormField,
   Installation,
+  ScreenshotContentType,
   ScreenshotInput,
   StartSupportInput,
   StartSupportResult,
@@ -49,7 +50,9 @@ function requireKey(key: string): void {
   }
 }
 
-function contentTypeFor(uri: string): "image/png" | "image/jpeg" | "image/webp" {
+const SCREENSHOT_TYPES: readonly string[] = ["image/png", "image/jpeg", "image/webp"]
+
+function contentTypeFor(uri: string): ScreenshotContentType {
   const lower = uri.split("?")[0]?.toLowerCase() ?? ""
   if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg"
   if (lower.endsWith(".webp")) return "image/webp"
@@ -258,8 +261,8 @@ export class StudioClient {
      * screenshots; a full workspace fails with `storage_full`.
      */
     screenshot: async (input: ScreenshotInput): Promise<string> => {
-      const contentType = input.contentType ?? contentTypeFor(input.uri)
-      const blob = await this.#readBlob(input.uri, contentType)
+      const { blob, contentType } =
+        "file" in input ? fileBlob(input.file, input.contentType) : await this.#uriBlob(input)
       const byteSize = input.byteSize ?? blob.size
 
       if (byteSize > MAX_SCREENSHOT_BYTES) {
@@ -295,6 +298,11 @@ export class StudioClient {
    * own type as the PUT's Content-Type, over any header passed, and a blob
    * read from a file has none — so an untyped one fails the signature.
    */
+  async #uriBlob(input: { uri: string; contentType?: ScreenshotContentType }) {
+    const contentType = input.contentType ?? contentTypeFor(input.uri)
+    return { blob: await this.#readBlob(input.uri, contentType), contentType }
+  }
+
   async #readBlob(uri: string, contentType: string): Promise<Blob> {
     // Capture libraries (react-native-view-shot on iOS) hand back bare paths.
     const url = uri.startsWith("/") ? `file://${uri}` : uri
@@ -307,6 +315,21 @@ export class StudioClient {
     const blob = await response.blob()
     return blob.type === contentType ? blob : new Blob([blob], { type: contentType })
   }
+}
+
+/**
+ * A picked file, typed as what will be signed. Checked here, before asking for
+ * an upload URL, so a PDF from a file input fails with a clear message.
+ */
+function fileBlob(file: Blob, contentType?: ScreenshotContentType): { blob: Blob; contentType: string } {
+  const type = contentType ?? file.type
+  if (!SCREENSHOT_TYPES.includes(type)) {
+    throw new StudioError(
+      "bad_request",
+      `Screenshots must be PNG, JPEG or WebP${type ? `, not ${type}` : ""}.`
+    )
+  }
+  return { blob: file.type === type ? file : new Blob([file], { type }), contentType: type }
 }
 
 /** Creates a client for one Studio project. */

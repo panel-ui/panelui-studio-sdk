@@ -19,6 +19,7 @@ export type {
   FormAnswer,
   FormField,
   Installation,
+  ScreenshotContentType,
   ScreenshotInput,
   StartSupportInput,
   StartSupportResult,

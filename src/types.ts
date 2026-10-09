@@ -112,10 +112,21 @@ export type ConversationMessage = {
   createdAt: string
 }
 
-export type ScreenshotInput = {
-  /** A local file uri (`file://…`) or anything `fetch` can read as a blob. */
-  uri: string
-  contentType?: "image/png" | "image/jpeg" | "image/webp"
-  /** Bytes. Read from the file when omitted. Max 5 MB. */
-  byteSize?: number
-}
+export type ScreenshotContentType = "image/png" | "image/jpeg" | "image/webp"
+
+export type ScreenshotInput =
+  | {
+      /** A local file uri (`file://…`) or anything `fetch` can read as a blob. */
+      uri: string
+      contentType?: ScreenshotContentType
+      /** Bytes. Read from the file when omitted. Max 5 MB. */
+      byteSize?: number
+    }
+  | {
+      /** The image itself: a `File` from an `<input type="file">`, or any `Blob`. */
+      file: Blob
+      /** Defaults to the file's own type. */
+      contentType?: ScreenshotContentType
+      /** Bytes. The file's size when omitted. Max 5 MB. */
+      byteSize?: number
+    }
