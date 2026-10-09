@@ -10,9 +10,19 @@ import {
   type ReactNode,
 } from "react"
 
-import { createStudio, StudioClient, type StudioConfig } from "../client"
-import { StudioError } from "../errors"
-import type { Announcement, ConversationMessage, FeedbackSummary, FormField, SubmitFeedbackInput } from "../types"
+// The package's own name, not `../client`: the hooks must share the app's copy
+// of the client, whichever build (web or native) its bundler picked.
+import {
+  createStudio,
+  StudioClient,
+  StudioError,
+  type Announcement,
+  type ConversationMessage,
+  type FeedbackSummary,
+  type FormField,
+  type StudioConfig,
+  type SubmitFeedbackInput,
+} from "panelui-studio"
 
 const StudioContext = createContext<StudioClient | null>(null)
 

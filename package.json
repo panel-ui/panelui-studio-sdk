@@ -1,7 +1,7 @@
 {
   "name": "panelui-studio",
   "version": "0.2.1",
-  "description": "Client for PanelUI Studio: feedback, conversations and screenshots for any React Native or Expo app.",
+  "description": "Client for PanelUI Studio: feedback, conversations and screenshots for React Native, Expo and web apps (Next.js, React, Vite).",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -12,6 +12,10 @@
   "keywords": [
     "react-native",
     "expo",
+    "react",
+    "nextjs",
+    "vite",
+    "web",
     "feedback",
     "panelui",
     "panelui-studio"
@@ -21,16 +25,37 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "react-native": "./dist/native/index.cjs",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "react-native": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/native/index.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/native/index.cjs"
+        }
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./react": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js",
-      "require": "./dist/react.cjs"
+      "import": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "require": {
+        "types": "./dist/react.d.cts",
+        "default": "./dist/react.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -39,7 +64,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "rm -rf dist && tsup && node scripts/check-web-build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

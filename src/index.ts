@@ -2,6 +2,7 @@ export { createStudio, StudioClient, SDK_NAME, SDK_VERSION, type StudioConfig } 
 export { StudioError, isStudioError, type StudioErrorCode } from "./errors"
 export {
   asyncStorage,
+  browserStorage,
   defaultStorage,
   memoryStorage,
   secureStore,
