@@ -1,0 +1,48 @@
+# Publishes the package to npm when a `vX.Y.Z` release is published.
+#
+# Authentication is npm Trusted Publishing: the job asks GitHub for an OIDC
+# token and npm exchanges it for a short-lived one, so there is no credential
+# in this repository. The repository is public, so the package also carries a
+# provenance attestation. One-time setup on npmjs.com for `panelui-studio`:
+# Settings -> Trusted Publisher -> GitHub Actions, org `panel-ui`, repository
+# `panelui-studio-sdk`, workflow `publish.yml`.
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref_name, 'v')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Node 22 ships npm 10, which has no OIDC support.
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+
+      - name: Check the tag against the package version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "::error::Tag v$TAG does not match package version $VERSION."
+            exit 1
+          fi
+
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - run: npm publish --provenance --access public

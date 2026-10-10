@@ -225,7 +225,35 @@ falling back to memory where the browser blocks it. Pass your own to control it.
 Expo, bare React Native, and the web: Next.js, React, Vite and Expo's web target.
 The API is plain HTTP with CORS open, so anything that can `fetch` can talk to
 Studio — see
-[the API reference](https://github.com/panel-ui/panelui-studio/blob/main/docs/api.md).
+[the API reference](https://panelui.dev/docs/studio/api-reference).
+
+## Development
+
+```sh
+npm ci
+npm run typecheck
+npm test
+npm run build
+```
+
+The package ships two builds from one source. The default build is for
+browsers and Node (Next.js, React, Vite, Expo's web target); the React Native
+build is published under the `react-native` export condition, where
+`foo.native.ts` replaces `foo.ts`. Only `.native.ts` files may import
+`react-native` or `expo-*`, and each keeps the same exports as its web twin;
+`scripts/check-web-build.mjs` fails the build otherwise. `panelui-studio/react`
+imports the core as `panelui-studio`, so it follows whichever build the app
+resolved, and keeps its `"use client"`.
+
+The SDK is documented in the Studio section of the PanelUI docs. A change to
+its public API updates those pages too, in both their App and Web versions.
+
+## Releasing
+
+Bump `version` in `package.json`, add the `CHANGELOG.md` entry, commit, then
+publish a GitHub release tagged `vX.Y.Z`. `.github/workflows/publish.yml`
+checks the tag against the version and publishes to npm with provenance.
+Versions up to 0.3.0 were released from the Studio repository as `sdk-vX.Y.Z`.
 
 ## License
 

@@ -5,8 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/panel-ui/panelui-studio.git",
-    "directory": "packages/sdk"
+    "url": "git+https://github.com/panel-ui/panelui-studio-sdk.git"
   },
   "homepage": "https://studio.panelui.dev",
   "keywords": [
@@ -61,7 +60,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "rm -rf dist && tsup && node scripts/check-web-build.mjs",
@@ -88,5 +88,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/panel-ui/panelui-studio-sdk/issues"
   }
 }
