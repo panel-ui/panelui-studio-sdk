@@ -27,13 +27,13 @@ export type SubmitFeedbackInput = {
   screen?: string
   appVersion?: string
   build?: string
-  /** Pro and Team. Ignored on Free, which returns a warning instead. */
+  /** Pro and Max. Ignored on Free, which returns a warning instead. */
   metadata?: Record<string, unknown>
-  /** Ids from `uploads.screenshot()`: 1 per report on Free, 3 on Pro and Team. */
+  /** Ids from `uploads.screenshot()`: 1 per report on Free, 3 on Pro and Max. */
   attachmentIds?: string[]
   /**
    * Answers to the project's custom form, keyed by field key (see
-   * `feedback.form()`). Pro and Team. Required fields apply once you send any.
+   * `feedback.form()`). Pro and Max. Required fields apply once you send any.
    */
   fields?: Record<string, FormAnswer>
   /**

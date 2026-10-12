@@ -40,8 +40,8 @@ users, no secret in the app.
 | `studio.feedback.list()` | This install's own submissions, newest first. |
 | `studio.conversations.messages(id)` | The thread for one item. Reading marks replies as read. |
 | `studio.conversations.send(id, body)` | A follow-up from the user. |
-| `studio.uploads.screenshot({ uri })` | Uploads an image and returns an `attachmentId` for `submit`. 1 per report on Free, 3 on Pro and Team. |
-| `studio.feedback.form()` | The project's custom form fields, to render next to the message. Send answers as `submit({ fields })`. Pro and Team. |
+| `studio.uploads.screenshot({ uri })` | Uploads an image and returns an `attachmentId` for `submit`. 1 per report on Free, 3 on Pro and Max. |
+| `studio.feedback.form()` | The project's custom form fields, to render next to the message. Send answers as `submit({ fields })`. Pro and Max. |
 | `studio.support.start(message)` | Starts a support conversation; replies come through `conversations.messages(id)`. |
 | `studio.announcements.list()` | Live announcements for this install. `seen(id)` records a view, `dismiss(id)` hides it for good. |
 | `studio.reset()` | Forgets the install, e.g. on sign-out of a shared device. |

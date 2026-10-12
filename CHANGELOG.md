@@ -8,6 +8,11 @@ the SDK lived until it moved here.
 
 ## [Unreleased]
 
+### Changed
+
+- The README and type comments call Studio's top plan **Max**, its name since
+  2026-10-12 (it was Team). Nothing in the client changes.
+
 ## [0.3.0] - 2026-10-10
 
 ### Added
